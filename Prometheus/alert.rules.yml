@@ -1,0 +1,32 @@
+groups:
+- name: node_alerts
+  rules:
+  # CPU 使用率超过 90% 持续 5 分钟
+  - alert: HighCPUUsage
+    expr: 100 - (avg by (instance)(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High CPU usage on {{ $labels.instance }}"
+      description: "CPU usage is {{ $value }}% for 5 minutes."
+
+  # 内存使用率超过 80%
+  - alert: HighMemoryUsage
+    expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 80
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage on {{ $labels.instance }}"
+      description: "Memory usage is {{ $value }}%."
+
+  # 磁盘空间不足
+  - alert: LowDiskSpace
+    expr: 100 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100) > 85
+    for: 30m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Low disk space on {{ $labels.instance }}"
+      description: "Free space is only {{ $value }}% on {{ $labels.mountpoint }}."
